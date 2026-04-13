@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  db:
+    # Используем образ PostgreSQL, в который уже "вшит" PostGIS
+    image: postgis/postgis:15-3.3
+    container_name: jess_db_container
+    restart: always
+    environment:
+      POSTGRES_USER: jess_user
+      POSTGRES_PASSWORD: jess_password
+      POSTGRES_DB: jess_db
+    ports:
+      # Пробрасываем порт 5433 с твоего ПК на порт 5432 внутри контейнера
+      - "5433:5432"
+    volumes:
+      # Сохраняем данные БД на жесткий диск, чтобы они не удалились при перезапуске
+      - jess_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  jess_postgres_data:
