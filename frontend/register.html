@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jess | Регистрация</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        body {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('/static/images/JessRegisterHTML.avif');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center font-sans text-gray-100 p-4">
+
+    <div class="glass-panel rounded-3xl p-8 w-full max-w-md transition-all duration-300">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold tracking-tight mb-2">Jess.</h1>
+            <p class="text-sm text-gray-400">Премиальная доставка. Присоединяйтесь.</p>
+        </div>
+
+        <form id="registerForm" class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Как к вам обращаться?</label>
+                <input type="text" id="fullName" required placeholder="Имя Фамилия" 
+                       class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 focus:border-white/30 focus:bg-white/20 focus:outline-none transition-colors placeholder-gray-500 text-white">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                <input type="email" id="email" required placeholder="your@email.com" 
+                       class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 focus:border-white/30 focus:bg-white/20 focus:outline-none transition-colors placeholder-gray-500 text-white">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Телефон</label>
+                <input type="tel" id="phone" required placeholder="+992 00 000 0000" 
+                       class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 focus:border-white/30 focus:bg-white/20 focus:outline-none transition-colors placeholder-gray-500 text-white">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Пароль</label>
+                <input type="password" id="password" required placeholder="••••••••" 
+                       class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 focus:border-white/30 focus:bg-white/20 focus:outline-none transition-colors placeholder-gray-500 text-white">
+            </div>
+
+            <input type="hidden" id="role" value="client">
+
+            <div id="errorMessage" class="hidden text-red-400 text-sm text-center bg-red-400/10 py-2 rounded-lg border border-red-400/20"></div>
+
+            <button type="submit" id="submitBtn" 
+                    class="w-full py-3.5 mt-4 bg-white text-black font-semibold rounded-xl hover:bg-gray-200 transition-colors focus:ring-4 focus:ring-white/30">
+                Создать аккаунт
+            </button>
+        </form>
+
+        <p class="text-center text-sm text-gray-400 mt-6">
+            Уже есть аккаунт? <a href="/login" class="text-white hover:underline">Войти</a>
+        </p>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Останавливаем стандартную перезагрузку страницы
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Меняем текст кнопки для эффекта загрузки
+            submitBtn.textContent = 'Создание...';
+            submitBtn.disabled = true;
+            errorMessage.classList.add('hidden');
+
+            // Собираем данные из полей, которые соответствуют нашей Pydantic схеме
+            const userData = {
+                full_name: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                password: document.getElementById('password').value,
+                role: document.getElementById('role').value
+            };
+
+            try {
+                // Отправляем POST запрос на наш локальный сервер
+                const response = await fetch('http://127.0.0.1:8000/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Если всё успешно, сохраняем email в память браузера (чтобы знать, кто вошел)
+                    localStorage.setItem('userEmail', data.email);
+                    localStorage.setItem('userName', data.full_name);
+                
+                    // Перенаправляем на страницу профиля
+                    window.location.href = '/profile';
+                } else {
+                    // Если ошибка (например, email уже занят) - показываем её
+                    errorMessage.textContent = data.detail || 'Произошла ошибка при регистрации';
+                    errorMessage.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Ошибка соединения с сервером. Убедитесь, что бэкенд запущен.';
+                errorMessage.classList.remove('hidden');
+            } finally {
+                submitBtn.textContent = 'Создать аккаунт';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
