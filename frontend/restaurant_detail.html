@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Jess | Меню</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0a0a0a; color: white; }
+        .glass { background: rgba(20,20,20,0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
+        .hero { height: 45vh; background-size: cover; background-position: center; }
+    </style>
+</head>
+<body class="font-sans">
+
+    <nav class="glass sticky top-0 z-50 p-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold">Jess.</a>
+            <div class="relative cursor-pointer" onclick="alert('Переход к оформлению заказа...')">
+                <span class="text-2xl">🛒</span>
+                <span id="cart-count" class="absolute -top-2 -right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+            </div>
+        </div>
+    </nav>
+
+    <div id="main-content">
+        <div class="flex justify-center items-center h-screen animate-pulse">Загрузка шедевров...</div>
+    </div>
+
+    <script>
+        const restId = {{ restaurant_id }};
+
+        // Логика корзины
+        function updateCartBadge() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            document.getElementById('cart-count').innerText = cart.length;
+        }
+
+        function addToCart(id, name, price) {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            cart.push({ id, name, price, restId });
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartBadge();
+            
+            // Маленький эффект подтверждения
+            alert(`Блюдо "${name}" добавлено в корзину!`);
+        }
+
+        async function loadMenu() {
+            try {
+                const res = await fetch(`/api/restaurants/${restId}`);
+                const data = await res.json();
+
+                let menuHtml = '';
+                if (!data.categories || data.categories.length === 0) {
+                    menuHtml = '<div class="text-center py-20 text-gray-400 text-xl">Меню находится в разработке 👨‍🍳</div>';
+                }
+                
+                // Генерируем блоки категорий
+                data.categories.forEach(cat => {
+                    let itemsHtml = '';
+                    cat.items.forEach(item => {
+                        itemsHtml += `
+                            <div class="glass p-5 rounded-3xl flex justify-between items-center group">
+                                <div class="flex-1 pr-4">
+                                    <h3 class="text-xl font-bold mb-1">${item.name}</h3>
+                                    <p class="text-gray-400 text-sm mb-3">${item.description || ''}</p>
+                                    <span class="text-yellow-500 font-bold text-lg">${item.price} TJS</span>
+                                </div>
+                                <button onclick="addToCart(${item.id}, '${item.name}', ${item.price})" 
+                                        class="bg-white text-black h-12 w-12 rounded-2xl font-bold text-2xl hover:bg-yellow-500 transition-colors">
+                                    +
+                                </button>
+                            </div>
+                        `;
+                    });
+
+                    menuHtml += `
+                        <section class="mb-12">
+                            <h2 class="text-3xl font-bold mb-6 text-yellow-500">${cat.name}</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">${itemsHtml}</div>
+                        </section>
+                    `;
+                });
+
+                document.getElementById('main-content').innerHTML = `
+                    <div class="hero relative" style="background-image: url('${data.image_url}')">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-black/40 to-transparent"></div>
+                        <div class="absolute bottom-0 p-8 w-full max-w-7xl mx-auto">
+                            <h1 class="text-6xl font-bold">${data.name}</h1>
+                            <p class="text-xl text-gray-300 mt-2">📍 ${data.address}</p>
+                        </div>
+                    </div>
+                    <div class="max-w-7xl mx-auto p-8">${menuHtml}</div>
+                `;
+            } catch (e) { console.error(e); }
+        }
+
+        updateCartBadge();
+        loadMenu();
+    </script>
+</body>
+</html>

@@ -1,9 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.auth import router as auth_router 
-from app.api.profile import router as auth_profile 
+from app.api.admin import router as admin_router
+from app.api.restaurants import router as restaurant_router
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from app.core.security import get_current_admin, get_current_user
+from app.models.user import User
 
 app = FastAPI()
 
@@ -17,11 +20,50 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 app.include_router(auth_router)
-app.include_router(auth_profile)
+app.include_router(restaurant_router)
+app.include_router(admin_router)
 #Разрешаем раздавать файлы из папки статик
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
+
 @app.get("/")
-async def root():
-    return {"message": "Сервер работает отличноц"}
+def render_home_page(request: Request):
+    return templates.TemplateResponse(request=request, name="index.html")
+
+# Страница конкретного ресторана (Меню)
+@app.get("/restaurant/{restaurant_id}")
+def render_restaurant_page(request: Request, restaurant_id: int):
+    # Передаем ID в шаблон, чтобы JS знал, чье меню скачивать
+    return templates.TemplateResponse(
+        request=request, 
+        name="restaurant_detail.html", 
+        context={"restaurant_id": restaurant_id}
+    )
+
+@app.get("/admin")
+def render_admin_page(request: Request, admin_user: User = Depends(get_current_admin)):
+    return templates.TemplateResponse(request=request, name="admin_users.html")
+
+@app.get('/register')
+def regiser_get(request : Request ):
+    return templates.TemplateResponse(request=request, name="register.html")
+
+@app.get("/login")
+def render_login_page(request: Request):
+    return templates.TemplateResponse(request=request, name="login.html")
+
+@app.get("/profile")
+def get_profile(
+    request: Request, 
+    user: User = Depends(get_current_user)
+):
+    
+    # Явно указываем, что есть что. Это "защита от дурака" для библиотек.
+    return templates.TemplateResponse(
+        request=request,         # Теперь request идет первым и явно
+        name="profile.html",     # Имя файла явно
+        context={"user": user}   # Контекст явно, и request внутрь словаря класть НЕ НУЖНО
+    )

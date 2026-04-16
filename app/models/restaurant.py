@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from app.db.database import Base
 
@@ -9,14 +9,11 @@ class Restaurant(Base):
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     
     name = Column(String, index=True, nullable=False)
-    description = Column(String)
-    address = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    address = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)
     
-    # Координаты для будущего расчета расстояния (пока просто числа)
-    latitude = Column(Float)
-    longitude = Column(Float)
-    
+    # ТЕ САМЫЕ ПОЛЯ, КОТОРЫЕ СЛЕТЕЛИ:
+    rating = Column(Float, default=0.0)
+    delivery_time_mins = Column(Integer, default=30)
     is_active = Column(Boolean, default=True)
-
-    # Связь с таблицей пользователей (один владелец -> много ресторанов)
-    owner = relationship("User", backref="restaurants")

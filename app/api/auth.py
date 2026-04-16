@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, status, Request, Response
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
 from app.core.security import verify_password, create_access_token
@@ -6,69 +6,83 @@ from app.schemas.token import Token
 from app.db.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserOut
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, jwt_get, authenticate_user
 from fastapi.templating import Jinja2Templates
+from app.core.config import settings
+from fastapi.responses import RedirectResponse
 
-router = APIRouter(tags=["Аутентификация"])
+router = APIRouter(prefix="/api/auth", tags=["Аутентификация"])
 templates = Jinja2Templates(directory="frontend")
 
-@router.get('/register')
-def regiser_get(request : Request ):
-    return templates.TemplateResponse(request=request, name="register.html")
+from fastapi import APIRouter, Depends, HTTPException, status, Form # Добавили Form
+from fastapi.responses import RedirectResponse
+from sqlalchemy.orm import Session
+# ... твои импорты моделей и хеширования ...
 
-@router.post("/register", response_model=UserOut)
-def register(user_data: UserCreate, db: Session = Depends(get_db)):
-    
-    user_exists = db.query(User).filter(User.email == user_data.email).first()
+@router.post("/register") # Убрали response_model, так как делаем редирект
+def register(
+    # Принимаем данные как форму, а не как JSON
+    email: str = Form(...),
+    password: str = Form(...),
+    full_name: str = Form(...),
+    phone: str = Form(None), # Опционально
+    role: str = Form("user"), # По дефолту юзер
+    db: Session = Depends(get_db)
+):
+    # 1. Проверка на существование
+    user_exists = db.query(User).filter(User.email == email).first()
     if user_exists:
+        # Тут лучше вернуть ошибку на страницу регистрации, 
+        # но для дебага пока оставим так:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Пользователь с таким email уже существует"
         )
     
-    hashed_pwd = get_password_hash(user_data.password)
+    # 2. Хешируем и создаем
+    hashed_pwd = get_password_hash(password)
     
-    #Создаем нового пользователя (пароль в хэше)
     new_user = User(
-        email=user_data.email,
+        email=email,
         hashed_password=hashed_pwd,
-        full_name=user_data.full_name,
-        phone=user_data.phone,
-        role=user_data.role
+        full_name=full_name,
+        phone=phone,
+        role=role
     )
     
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    try:
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+    except Exception as e:
+        db.rollback()
+        print(f"Ошибка БД: {e}")
+        raise HTTPException(status_code=500, detail="Ошибка базы данных")
     
-    return new_user
+    # 3. Редирект на логин! 
+    # Статус 303 нужен, чтобы POST превратился в GET при переходе
+    return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
 
-@router.get("/login")
-def render_login_page(request: Request):
-    return templates.TemplateResponse(request=request, name="login.html")
 
 @router.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    # 1. Ищем пользователя в БД
-    # Важно: OAuth2 всегда ждет поле "username", поэтому мы передаем в него наш email
-    user = db.query(User).filter(User.email == form_data.username).first()
+def login(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
     
-    # 2. Если юзера нет или пароли не совпали — выдаем ошибку (одну и ту же для безопасности)
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Неверный email или пароль",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    user = authenticate_user(db, username, password)
+
+    if not user: 
+        raise HTTPException(status_code=401, detail="Wrong password or username")
     
-    # 3. Если всё ок — создаем токен
-    access_token = create_access_token(data={"sub": user.email})
-    
-    # Отдаем токен и данные пользователя, чтобы фронтенд мог их красиво показать
-    return {
-        "access_token": access_token, 
-        "token_type": "bearer",
-        "email": user.email,
-        "full_name": user.full_name
-    }
+    access_token = jwt_get(user)
+
+    response = RedirectResponse(url="/profile", status_code=302)
+
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        samesite="lax",
+        path="/",
+        max_age= settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    )
+
+    return response

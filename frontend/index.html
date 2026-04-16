@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jess | Доставка премиум-класса</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: white;
+            /* Премиальный темный фон с блюром */
+            background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.95)), url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .glass {
+            background: rgba(20, 20, 20, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        /* Убираем стандартный скроллбар для категорий, чтобы было красиво */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans">
+
+    <nav class="glass w-full sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                
+                <div class="flex-shrink-0 cursor-pointer" onclick="window.location.href='/'">
+                    <span class="text-3xl font-bold tracking-tight text-white">Jess.</span>
+                </div>
+
+                <div class="flex-1 max-w-lg mx-8 hidden md:block">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Найти ресторан или блюдо..." 
+                               class="w-full bg-white/10 border border-white/20 rounded-2xl py-2 pl-10 pr-4 text-white focus:outline-none focus:border-yellow-500 focus:bg-white/20 transition-all placeholder-gray-400">
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-6">
+                    <button class="relative text-gray-300 hover:text-white transition-colors flex items-center" title="Корзина">
+                        <span class="text-2xl">🛒</span>
+                        <span class="absolute -top-2 -right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded-full border-2 border-[#1a1a1a]">0</span>
+                    </button>
+
+                    <div id="nav-actions"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="border-t border-white/10 bg-black/20">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex space-x-4 overflow-x-auto no-scrollbar" id="category-filters">
+            <button onclick="filterByCategory('все')" class="category-btn active px-5 py-1.5 bg-white text-black rounded-full font-semibold text-sm whitespace-nowrap transition">Все заведения</button>
+            <button onclick="filterByCategory('национальн')" class="category-btn px-5 py-1.5 bg-white/10 text-gray-300 hover:bg-white/20 rounded-full font-semibold text-sm whitespace-nowrap transition">🥘 Национальная</button>
+            <button onclick="filterByCategory('итальянск')" class="category-btn px-5 py-1.5 bg-white/10 text-gray-300 hover:bg-white/20 rounded-full font-semibold text-sm whitespace-nowrap transition">🍝 Итальянская</button>
+            <button onclick="filterByCategory('восточн')" class="category-btn px-5 py-1.5 bg-white/10 text-gray-300 hover:bg-white/20 rounded-full font-semibold text-sm whitespace-nowrap transition">🌯 Восточная</button>
+            <button onclick="filterByCategory('пицца')" class="category-btn px-5 py-1.5 bg-white/10 text-gray-300 hover:bg-white/20 rounded-full font-semibold text-sm whitespace-nowrap transition">🍕 Пицца</button>
+        </div>
+    </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12">
+        
+        <div class="text-center mb-16">
+            <h1 class="text-5xl md:text-6xl font-extrabold mb-6">Выбирайте <span class="text-yellow-500">лучшее.</span></h1>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto">Премиальная доставка из культовых заведений города прямо к вашей двери.</p>
+        </div>
+
+        <div id="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="col-span-full text-center py-20 text-gray-500 animate-pulse text-lg">
+                Загружаем лучшие заведения...
+            </div>
+        </div>
+
+        <div id="no-results" class="hidden text-center py-20">
+            <span class="text-4xl block mb-4">🍽️</span>
+            <h3 class="text-2xl font-bold">Ничего не найдено</h3>
+            <p class="text-gray-400 mt-2">Попробуйте изменить запрос</p>
+        </div>
+
+    </main>
+
+    <footer class="glass mt-auto w-full border-t border-white/10">
+        <div class="max-w-7xl mx-auto px-4 py-12 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="text-center md:text-left">
+                <span class="text-3xl font-bold text-white block mb-2">Jess.</span>
+                <p class="text-gray-400 text-sm">© 2026 Все права защищены.</p>
+            </div>
+            
+            <div class="flex flex-col md:flex-row gap-8 text-center md:text-left">
+                <div>
+                    <h4 class="text-white font-semibold mb-3">Контакты</h4>
+                    <p class="text-gray-400 text-sm hover:text-white cursor-pointer transition">📞 +992 (98) 580-06-95</p>
+                    <p class="text-gray-400 text-sm hover:text-white cursor-pointer transition">✉️ support@jess.tj</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-semibold mb-3">Социальные сети</h4>
+                    <div class="flex justify-center md:justify-start space-x-4">
+                        <a href="https://t.me/pepsi_mm" target="_blank" class="text-gray-400 hover:text-yellow-500 transition text-xl"><span class="text-sm">Telegram</span></a>
+                        <a href="https://www.instagram.com/cheesf__?igsh=Z3RvbHBtdmJpYWV1&utm_source=qr" target="_blank" class="text-gray-400 hover:text-yellow-500 transition text-xl"><span class="text-sm">Instagram</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Глобальная переменная для хранения ресторанов, чтобы искать по ним без запросов к серверу
+        let allRestaurants = [];
+
+        // 1. Управление кнопками (Войти / Профиль)
+        const token = localStorage.getItem('accessToken');
+        const navActions = document.getElementById('nav-actions');
+        
+        if (token) {
+            navActions.innerHTML = `
+                <a href="/profile" class="px-5 py-2 bg-white/10 text-white border border-white/20 rounded-xl hover:bg-white hover:text-black transition-colors font-semibold text-sm">
+                    👤 Мой профиль
+                </a>
+            `;
+        } else {
+            navActions.innerHTML = `
+                <a href="/login" class="px-5 py-2 bg-white text-black rounded-xl hover:bg-gray-200 transition-colors font-semibold text-sm">
+                    Войти
+                </a>
+            `;
+        }
+
+        // 2. Функция Отрисовки карточек
+        function renderCards(restaurants) {
+            const grid = document.getElementById('grid');
+            const noResults = document.getElementById('no-results');
+            
+            grid.innerHTML = '';
+            
+            if (restaurants.length === 0) {
+                grid.classList.add('hidden');
+                noResults.classList.remove('hidden');
+                return;
+            }
+
+            grid.classList.remove('hidden');
+            noResults.classList.add('hidden');
+
+            restaurants.forEach(r => {
+                grid.innerHTML += `
+                    <div onclick="window.location.href='/restaurant/${r.id}'" 
+                         class="glass rounded-3xl overflow-hidden hover:-translate-y-2 hover:shadow-2xl hover:shadow-yellow-500/10 cursor-pointer transition-all duration-300 flex flex-col h-full group">
+                        
+                        <div class="h-56 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" 
+                             style="background-image: url('${r.image_url}')"></div>
+                        
+                        <div class="p-6 flex flex-col flex-grow relative z-10 bg-[#141414]/50">
+                            <h2 class="text-2xl font-bold text-white mb-2">${r.name}</h2>
+                            <p class="text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">${r.description}</p>
+                            
+                            <div class="pt-4 border-t border-white/10 flex justify-between items-center mt-auto">
+                                <span class="bg-yellow-500/10 text-yellow-500 px-3 py-1 rounded-lg text-sm font-bold border border-yellow-500/20">
+                                    ⭐ ${r.rating}
+                                </span>
+                                <span class="text-gray-400 text-sm flex items-center">
+                                    <span class="mr-1">🕒</span> ~${r.delivery_time_mins} мин
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // 3. Загрузка данных с сервера (нашего нового API)
+        async function loadData() {
+            try {
+                const res = await fetch('/api/restaurants/');
+                allRestaurants = await res.json();
+                renderCards(allRestaurants); // Первичная отрисовка всех заведений
+            } catch (e) {
+                console.error("Ошибка сети:", e);
+                document.getElementById('grid').innerHTML = 
+                    '<div class="col-span-full text-center text-red-500">Не удалось загрузить данные с сервера.</div>';
+            }
+        }
+
+        // 4. Логика "Живого поиска"
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            // Фильтруем массив по имени ИЛИ по описанию
+            const filtered = allRestaurants.filter(r => 
+                r.name.toLowerCase().includes(query) || 
+                (r.description && r.description.toLowerCase().includes(query))
+            );
+            renderCards(filtered);
+        });
+
+        // Запуск
+        loadData();
+
+        // Функция фильтрации по категориям
+        function filterByCategory(keyword) {
+            // 1. Сбрасываем поиск в текстовой строке, чтобы не было конфликта
+            document.getElementById('searchInput').value = '';
+
+            // 2. Обновляем визуальный стиль кнопок (подсветка активной)
+            const buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('bg-white', 'text-black');
+                btn.classList.add('bg-white/10', 'text-gray-300');
+            });
+
+            // Подсвечиваем нажатую кнопку (через event или поиск по тексту)
+            event.currentTarget.classList.remove('bg-white/10', 'text-gray-300');
+            event.currentTarget.classList.add('bg-white', 'text-black');
+
+            // 3. Сама логика фильтрации
+            if (keyword === 'все') {
+                renderCards(allRestaurants);
+            } else {
+                const filtered = allRestaurants.filter(r => 
+                    r.description.toLowerCase().includes(keyword.toLowerCase()) ||
+                    r.name.toLowerCase().includes(keyword.toLowerCase())
+                );
+                renderCards(filtered);
+            }
+        }
+    </script>
+</body>
+</html>

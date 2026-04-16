@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Jess | Панель Управления</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0a0a0a; color: white; }
+        .glass { background: rgba(20,20,20,0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
+        /* Стилизация select под темную тему */
+        select { background-color: #1a1a1a; color: white; border: 1px solid #333; outline: none; }
+        select:focus { border-color: #eab308; }
+    </style>
+</head>
+<body class="font-sans min-h-screen flex flex-col">
+
+    <nav class="glass sticky top-0 z-50 p-4 border-b border-white/10">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold">Jess <span class="text-yellow-500 text-sm align-top">ADMIN</span></a>
+            <span class="text-gray-400">Управление доступом</span>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl mx-auto w-full p-8 mt-8">
+        <div class="flex justify-between items-end mb-8">
+            <div>
+                <h1 class="text-4xl font-bold mb-2">Пользователи</h1>
+                <p class="text-gray-400">Назначение ролей и прав доступа (RBAC)</p>
+            </div>
+        </div>
+
+        <div class="glass rounded-2xl overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-white/5 border-b border-white/10 text-gray-300 text-sm uppercase tracking-wider">
+                        <th class="p-5 font-semibold">ID</th>
+                        <th class="p-5 font-semibold">Email</th>
+                        <th class="p-5 font-semibold">Статус</th>
+                        <th class="p-5 font-semibold">Роль (Права)</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table" class="divide-y divide-white/5">
+                    <tr><td colspan="4" class="p-8 text-center text-gray-500 animate-pulse">Загрузка базы пользователей...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // Функция изменения роли
+        async function changeRole(userId, newRole, selectElement) {
+            // Визуально блокируем селект во время запроса
+            selectElement.disabled = true;
+            selectElement.classList.add('opacity-50');
+
+            try {
+                const res = await fetch(`/api/admin/users/${userId}/role`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: newRole })
+                });
+
+                if (res.ok) {
+                    // Кратко подсвечиваем зеленым при успехе
+                    selectElement.style.borderColor = '#22c55e';
+                    setTimeout(() => selectElement.style.borderColor = '#333', 1000);
+                } else {
+                    alert("Ошибка при обновлении роли!");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Ошибка сети");
+            } finally {
+                selectElement.disabled = false;
+                selectElement.classList.remove('opacity-50');
+            }
+        }
+
+        // Загрузка пользователей
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/admin/users');
+                const users = await res.json();
+                
+                const tbody = document.getElementById('users-table');
+                tbody.innerHTML = '';
+
+                users.forEach(u => {
+                    const statusDot = u.is_active 
+                        ? '<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span> Активен' 
+                        : '<span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-2"></span> Заблокирован';
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="p-5 text-gray-400">#${u.id}</td>
+                            <td class="p-5 font-medium">${u.email}</td>
+                            <td class="p-5 text-sm text-gray-300">${statusDot}</td>
+                            <td class="p-5">
+                                <select onchange="changeRole(${u.id}, this.value, this)" 
+                                        class="px-3 py-2 rounded-lg text-sm w-40 cursor-pointer transition-colors">
+                                    <option value="user" ${u.role === 'user' ? 'selected' : ''}> Пользователь</option>
+                                    <option value="owner" ${u.role === 'owner' ? 'selected' : ''}> Владелец</option>
+                                    <option value="admin" ${u.role === 'admin' ? 'selected' : ''}> Администратор</option>
+                                </select>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (e) {
+                console.error(e);
+                document.getElementById('users-table').innerHTML = 
+                    '<tr><td colspan="4" class="p-8 text-center text-red-500">Ошибка загрузки данных</td></tr>';
+            }
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>
