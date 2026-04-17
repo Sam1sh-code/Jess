@@ -99,8 +99,9 @@
                                 <select onchange="changeRole(${u.id}, this.value, this)" 
                                         class="px-3 py-2 rounded-lg text-sm w-40 cursor-pointer transition-colors">
                                     <option value="user" ${u.role === 'user' ? 'selected' : ''}> Пользователь</option>
-                                    <option value="owner" ${u.role === 'owner' ? 'selected' : ''}> Владелец</option>
-                                    <option value="admin" ${u.role === 'admin' ? 'selected' : ''}> Администратор</option>
+                                    <option value="owner" ${u.role === 'owner' ? 'selected' : ''}> Владелец ресторана</option>
+                                    <option value="admin" ${u.role === 'admin' ? 'selected' : ''}> Админ</option>
+                                    <option value="delivery" ${u.role === 'delivery' ? 'selected' : ''}> Доставка</option>
                                 </select>
                             </td>
                         </tr>

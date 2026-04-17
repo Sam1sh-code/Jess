@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Меню | {{ restaurant.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        body {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.9)), url('{{ restaurant.image_url if restaurant.image_url else "/static/default.jpg" }}');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-100 p-6">
+
+    <div class="max-w-4xl mx-auto space-y-8 mt-10">
+        
+        <div class="glass-panel p-6 rounded-3xl text-center">
+            <h1 class="text-3xl font-bold">Управление меню: <span class="text-purple-400">{{ restaurant.name }}</span></h1>
+            <a href="/profile" class="text-sm text-gray-400 hover:text-white mt-2 inline-block">← Назад в профиль</a>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            
+            <div class="glass-panel p-8 rounded-3xl">
+                <h2 class="text-xl font-bold mb-6 text-purple-400">1. Добавить категорию</h2>
+                
+                <form action="/api/restaurants/categories/create" method="POST" class="space-y-4">
+                    <input type="hidden" name="restaurant_id" value="{{ restaurant.id }}">
+                    
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">Название категории</label>
+                        <input type="text" name="name" required placeholder="Например: Горячие напитки" 
+                               class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-purple-500 focus:outline-none">
+                    </div>
+                    
+                    <button type="submit" class="w-full py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors">
+                        + Создать категорию
+                    </button>
+                </form>
+
+                <div class="mt-6">
+                    <p class="text-sm text-gray-400 mb-2">Уже созданы:</p>
+                    <div class="flex flex-wrap gap-2">
+                        {% for cat in categories %}
+                            <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-lg text-sm border border-purple-500/30">
+                                {{ cat.name }}
+                            </span>
+                        {% else %}
+                            <span class="text-sm text-gray-600">Пока нет категорий</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel p-8 rounded-3xl">
+                <h2 class="text-xl font-bold mb-6 text-blue-400">2. Добавить блюдо</h2>
+                
+                {% if categories %}
+                <form action="/api/restaurants/items/create" method="POST" class="space-y-4">
+                    <input type="hidden" name="restaurant_id" value="{{ restaurant.id }}">
+                    
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">Категория</label>
+                        <select name="category_id" required class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-white/10 focus:border-blue-500 focus:outline-none text-white">
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">Название блюда</label>
+                        <input type="text" name="name" required placeholder="Чизбургер" class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 focus:outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-1">Цена</label>
+                            <input type="number" step="0.01" name="price" required placeholder="150.00" class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-1">Картинка (URL)</label>
+                            <input type="url" name="image_url" placeholder="https://..." class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-blue-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 font-bold rounded-xl hover:from-blue-500 hover:to-purple-500 transition-colors mt-2">
+                        + Добавить в меню
+                    </button>
+                </form>
+                {% else %}
+                <div class="p-6 bg-red-500/10 border border-red-500/30 rounded-xl text-center">
+                    <p class="text-red-400 font-semibold mb-2">Сначала создайте категорию!</p>
+                    <p class="text-sm text-gray-400">Блюда нельзя добавить в пустоту. Создайте хотя бы одну категорию слева.</p>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

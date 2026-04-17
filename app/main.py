@@ -5,7 +5,7 @@ from app.api.admin import router as admin_router
 from app.api.restaurants import router as restaurant_router
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from app.core.security import get_current_admin, get_current_user
+from app.core.security import get_current_admin, get_current_user, get_owner_or_admin
 from app.models.user import User
 
 app = FastAPI()
@@ -33,15 +33,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 def render_home_page(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
 
-# Страница конкретного ресторана (Меню)
-@app.get("/restaurant/{restaurant_id}")
-def render_restaurant_page(request: Request, restaurant_id: int):
-    # Передаем ID в шаблон, чтобы JS знал, чье меню скачивать
-    return templates.TemplateResponse(
-        request=request, 
-        name="restaurant_detail.html", 
-        context={"restaurant_id": restaurant_id}
-    )
+
 
 @app.get("/admin")
 def render_admin_page(request: Request, admin_user: User = Depends(get_current_admin)):
@@ -67,3 +59,8 @@ def get_profile(
         name="profile.html",     # Имя файла явно
         context={"user": user}   # Контекст явно, и request внутрь словаря класть НЕ НУЖНО
     )
+
+@app.get("/restaurants/create")
+def show_create_restaurant_form(request: Request, user: User = Depends(get_owner_or_admin)):
+    return templates.TemplateResponse(request=request, name = "create_restaurant.html")
+    # return templates.TemplateResponse(name = "create_restaurant.html", context= {"request": request, "user": user})

@@ -143,3 +143,12 @@ def get_current_user(
         )
 
     return user
+
+def get_owner_or_admin(current_user: User = Depends(get_current_user)):
+    """Пропускает только владельцев ресторанов и админов"""
+    if current_user.role not in ["admin", "restaurant_owner"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Недостаточно прав. Только для партнеров и администрации."
+        )
+    return current_user

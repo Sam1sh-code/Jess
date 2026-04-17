@@ -157,11 +157,11 @@
 
             restaurants.forEach(r => {
                 grid.innerHTML += `
-                    <div onclick="window.location.href='/restaurant/${r.id}'" 
-                         class="glass rounded-3xl overflow-hidden hover:-translate-y-2 hover:shadow-2xl hover:shadow-yellow-500/10 cursor-pointer transition-all duration-300 flex flex-col h-full group">
+                    <div onclick="window.location.href='/api/restaurants/${r.id}/manage-menu'" 
+                        class="glass rounded-3xl overflow-hidden hover:-translate-y-2 hover:shadow-2xl hover:shadow-yellow-500/10 cursor-pointer transition-all duration-300 flex flex-col h-full group">
                         
                         <div class="h-56 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" 
-                             style="background-image: url('${r.image_url}')"></div>
+                            style="background-image: url('${r.image_url}')"></div>
                         
                         <div class="p-6 flex flex-col flex-grow relative z-10 bg-[#141414]/50">
                             <h2 class="text-2xl font-bold text-white mb-2">${r.name}</h2>

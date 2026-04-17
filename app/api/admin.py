@@ -26,24 +26,6 @@ def get_all_users(
     # FastAPI сам превратит объекты SQLAlchemy в JSON для твоей таблицы.
     return users
 
-# @router.get("/users", dependencies=[Depends(get_current_admin)])
-# def get_all_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-
-#     users = db.query(User).all()
-
-#     # user_ok = get_current_user(user_ok)        #Валидный юзер
-
-#     # # Возвращаем список словарей (без паролей в целях безопасности)
-#     return [
-#         {
-#             "id": u.id, 
-#             "email": u.email, 
-#             "role": u.role, 
-#             "is_active": u.is_active
-#         } 
-#         for u in users
-#     ]
-
 @router.put("/users/{user_id}/role", dependencies=[Depends(get_current_admin)])
 def update_user_role(user_id: int, payload: RoleUpdate, db: Session = Depends(get_db)):
     # Ищем пользователя по ID
