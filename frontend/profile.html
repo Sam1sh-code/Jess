@@ -70,6 +70,11 @@
                                 </a>
                             </div>
                             {% endif %}
+                            {% if user.role == 'delivery' or user.role == 'admin' %}
+                                <a href="/api/courier/orders" class="block w-full text-center py-4 bg-yellow-500 text-black font-bold rounded-2xl hover:bg-yellow-400 transition-colors mb-4">
+                                    🛵 Панель курьера
+                                </a>
+                            {% endif %}
                         </span>
                     </p>
                 </div>
@@ -92,6 +97,7 @@
                     <p class="text-gray-400 mb-6">Здесь будут отображаться ваши вкусные заказы.</p>
                     <button class="px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 active:scale-95 transition-all">
                         Перейти к выбору еды
+                        <a href="/" class="inline-block px-4 py-2 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg text-sm hover:bg-purple-500/40 transition-all"></a>
                     </button>
                 </div>
             </div>

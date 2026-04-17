@@ -7,6 +7,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from app.core.security import get_current_admin, get_current_user, get_owner_or_admin
 from app.models.user import User
+from app.api.orders import router as orders_router
+from app.api.courier import courier_router 
 
 app = FastAPI()
 
@@ -24,6 +26,9 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(restaurant_router)
 app.include_router(admin_router)
+app.include_router(orders_router)
+app.include_router(courier_router)
+
 #Разрешаем раздавать файлы из папки статик
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

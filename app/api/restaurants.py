@@ -107,44 +107,29 @@ def create_menu_item_action(
 
 
 @router.get("/{restaurant_id}")
-def get_single_restaurant(restaurant_id: int, db: Session = Depends(get_db)):
-    # 1. Достаем ресторан вместе с меню из БД
-    restaurant = db.query(Restaurant).options(
-        joinedload(Restaurant.categories).joinedload(Category.items)
-    ).filter(Restaurant.id == restaurant_id).first()
-    
+def view_restaurant_menu(
+    restaurant_id: int, 
+    request: Request, 
+    db: Session = Depends(get_db)
+):
+    # 1. Достаем ресторан
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
     if not restaurant:
-        return {"error": "Ресторан не найден"}
-        
-    # 2. Вручную собираем чистый словарь, чтобы FastAPI отдал его без обрезаний
-    result = {
-        "id": restaurant.id,
-        "name": restaurant.name,
-        "description": restaurant.description,
-        "address": restaurant.address,
-        "image_url": restaurant.image_url,
-        "rating": restaurant.rating,
-        "categories": []
-    }
+        raise HTTPException(status_code=404, detail="Ресторан не найден")
     
-    # 3. Аккуратно перекладываем категории и блюда
-    for cat in restaurant.categories:
-        category_data = {
-            "id": cat.id,
-            "name": cat.name,
-            "items": []
+    # 2. Достаем категории (а благодаря backref="items" в твоей модели, 
+    # вместе с категориями автоматически подтянутся и все блюда внутри них!)
+    categories = db.query(Category).filter(Category.restaurant_id == restaurant_id).all()
+    
+    # 3. Отдаем клиентский HTML (строго без кортежей!)
+    return templates.TemplateResponse(
+        request=request, 
+        name="restaurant.html", 
+        context={
+            "restaurant": restaurant, 
+            "categories": categories
         }
-        for item in cat.items:
-            category_data["items"].append({
-                "id": item.id,
-                "name": item.name,
-                "description": item.description,
-                "price": item.price,
-                "image_url": item.image_url
-            })
-        result["categories"].append(category_data)
-
-    return result
+    )
 
 @router.get("/{restaurant_id}/manage-menu")
 def manage_menu_page(
