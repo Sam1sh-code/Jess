@@ -31,6 +31,7 @@ def create_restaurant_action(
     db: Session = Depends(get_db),
     user: User = Depends(get_owner_or_admin)
 ):
+
     new_restaurant = Restaurant(
         owner_id=user.id, 
         name=name,
@@ -105,32 +106,6 @@ def create_menu_item_action(
     
     return RedirectResponse(url=f"/api/restaurants/{restaurant_id}/manage-menu", status_code=status.HTTP_303_SEE_OTHER)
 
-
-@router.get("/{restaurant_id}")
-def view_restaurant_menu(
-    restaurant_id: int, 
-    request: Request, 
-    db: Session = Depends(get_db)
-):
-    # 1. Достаем ресторан
-    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
-    if not restaurant:
-        raise HTTPException(status_code=404, detail="Ресторан не найден")
-    
-    # 2. Достаем категории (а благодаря backref="items" в твоей модели, 
-    # вместе с категориями автоматически подтянутся и все блюда внутри них!)
-    categories = db.query(Category).filter(Category.restaurant_id == restaurant_id).all()
-    
-    # 3. Отдаем клиентский HTML (строго без кортежей!)
-    return templates.TemplateResponse(
-        request=request, 
-        name="restaurant.html", 
-        context={
-            "restaurant": restaurant, 
-            "categories": categories
-        }
-    )
-
 @router.get("/{restaurant_id}/manage-menu")
 def manage_menu_page(
     restaurant_id: int, 
@@ -157,4 +132,34 @@ def manage_menu_page(
         request=request, 
         name="manage_menu.html", 
         context=context_data
+    )
+
+@router.get("/create")
+def show_create_restaurant_form(request: Request, user: User = Depends(get_owner_or_admin)):
+    return templates.TemplateResponse(request=request, name = "create_restaurant.html")
+
+
+
+@router.get("/{restaurant_id}")
+def view_restaurant_menu(
+    restaurant_id: int, 
+    request: Request, 
+    db: Session = Depends(get_db)
+):
+    # 1. Достаем ресторан
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Ресторан не найден")
+    
+    # 2. Достаем категории (а благодаря backref="items" в твоей модели, 
+    # вместе с категориями автоматически подтянутся и все блюда внутри них!)
+    categories = db.query(Category).filter(Category.restaurant_id == restaurant_id).all()
+    
+    return templates.TemplateResponse(
+        request=request, 
+        name="restaurant.html", 
+        context={
+            "restaurant": restaurant, 
+            "categories": categories
+        }
     )

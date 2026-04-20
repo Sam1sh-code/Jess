@@ -46,7 +46,7 @@
                     </ul>
 
                     {% if order.status in ['pending', 'preparing'] %}
-                    <form action="/api/restaurants/orders/{{ order.id }}/status" method="POST" class="flex gap-4">
+                    <form action="/api/orders/{{ order.id }}/status" method="POST" class="flex gap-4">
                         {% if order.status == 'pending' %}
                             <button type="submit" name="status" value="preparing" class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-500">
                                 Взять в работу

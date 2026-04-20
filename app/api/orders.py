@@ -10,7 +10,7 @@ from app.db.database import get_db
 from app.core.security import get_current_user
 from fastapi.responses import RedirectResponse
 
-router = APIRouter(prefix="/api/restaurants", tags=["API Ресторанов"])
+router = APIRouter(prefix="/api/orders", tags=["API Ресторанов"])
 templates = Jinja2Templates(directory="frontend")
 
 # 1. Pydantic-схемы для проверки того, что прислал фронтенд
@@ -72,7 +72,8 @@ def view_restaurant_orders(
         joinedload(Order.client),
         joinedload(Order.items).joinedload(OrderItem.item)
     ).filter(
-        Order.restaurant_id == restaurant_id
+        Order.restaurant_id == restaurant_id,
+        Order.status != "completed"
     ).order_by(Order.created_at.desc()).all()
     
     return templates.TemplateResponse(
@@ -85,7 +86,7 @@ def view_restaurant_orders(
     )
 
 # Роут для смены статуса (Ресторан нажимает "Взять в работу" или "Готово")
-@router.post("/orders/{order_id}/status")
+@router.post("/{order_id}/status")
 def update_order_status(
     order_id: int,
     status: str = Form(...), # Получаем новый статус из кнопки
@@ -100,4 +101,4 @@ def update_order_status(
     db.commit()
     
     # Редиректим обратно на страницу заказов
-    return RedirectResponse(url=f"/api/restaurants/{order.restaurant_id}/orders", status_code=303)
+    return RedirectResponse(url=f"/api/orders/{order.restaurant_id}/orders", status_code=303)
