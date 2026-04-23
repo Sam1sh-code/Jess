@@ -15,6 +15,7 @@ from app.db.database import get_db
 from app.models.restaurant import Restaurant
 from app.models.menu import Category
 from sqlalchemy.orm import Session
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 
@@ -90,31 +91,13 @@ def get_profile(
         }
     )
 
-# @app.get("/api/restaurants/create")
-# def show_create_restaurant_form(request: Request, user: User = Depends(get_owner_or_admin)):
-#     return templates.TemplateResponse(request=request, name = "create_restaurant.html")
-
-
-# @app.get("/api/restaurants/{restaurant_id}")
-# def view_restaurant_menu(
-#     restaurant_id: int, 
-#     request: Request, 
-#     db: Session = Depends(get_db)
-# ):
-#     # 1. Достаем ресторан
-#     restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
-#     if not restaurant:
-#         raise HTTPException(status_code=404, detail="Ресторан не найден")
+@app.exception_handler(HTTPException)
+async def custom_http_exception_handler(request: Request, exc: HTTPException):
     
-#     # 2. Достаем категории (а благодаря backref="items" в твоей модели, 
-#     # вместе с категориями автоматически подтянутся и все блюда внутри них!)
-#     categories = db.query(Category).filter(Category.restaurant_id == restaurant_id).all()
-    
-#     return templates.TemplateResponse(
-#         request=request, 
-#         name="restaurant.html", 
-#         context={
-#             "restaurant": restaurant, 
-#             "categories": categories
-#         }
-#     )
+    if exc.status_code == 401:
+        return templates.TemplateResponse(
+            request=request,
+            name="401.html", 
+            status_code=401
+        )
+    return HTMLResponse(content=f"<h1>Ошибка {exc.status_code}</h1><p>{exc.detail}</p>", status_code=exc.status_code)   
